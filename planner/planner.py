@@ -1,18 +1,24 @@
 import numpy as np
 
 class Planner:
-    """
-    Chooses next action based on belief.
-    Currently: greedy (max probability)
-    """
 
-    def get_next_move(self, belief, visited):
-        scores = np.copy(belief)
+    def get_next_move(self, belief, visited, drone_pos):
+        best_score = -1
+        best_pos = drone_pos
 
         for i in range(belief.shape[0]):
             for j in range(belief.shape[1]):
-                if (i, j) in visited:
-                    scores[i][j] = -1  # avoid revisiting
 
-        next_pos = np.unravel_index(np.argmax(scores), scores.shape)
-        return next_pos
+                if (i, j) in visited:
+                    continue
+
+                prob = belief[i][j]
+                dist = abs(drone_pos[0] - i) + abs(drone_pos[1] - j)
+
+                score = prob / (dist + 1)
+
+                if score > best_score:
+                    best_score = score
+                    best_pos = (i, j)
+
+        return best_pos
