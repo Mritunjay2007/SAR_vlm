@@ -1,11 +1,20 @@
 class Drone:
-    """
-    Represents the agent exploring the environment.
-    """
     def __init__(self, start=(0, 0)):
         self.position = start
         self.path = [start]
 
-    def move(self, next_pos):
-        self.position = next_pos
-        self.path.append(next_pos)
+    def move_towards(self, target):
+        x, y = self.position
+        tx, ty = target
+
+        if x < tx:
+            x += 1
+        elif x > tx:
+            x -= 1
+        elif y < ty:
+            y += 1
+        elif y > ty:
+            y -= 1
+
+        self.position = (x, y)
+        self.path.append(self.position)

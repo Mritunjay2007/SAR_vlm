@@ -2,10 +2,6 @@ import numpy as np
 import random
 
 class GridEnvironment:
-    """
-    Represents the ground truth world.
-    The drone does NOT know this.
-    """
     def __init__(self, size):
         self.size = size
         self.grid = np.zeros((size, size))
@@ -19,3 +15,7 @@ class GridEnvironment:
 
     def is_victim(self, pos):
         return self.grid[pos[0]][pos[1]] == 1
+
+    def get_image(self, pos):
+        x, y = pos
+        return f"dataset/grid/{x}_{y}.jpg"
