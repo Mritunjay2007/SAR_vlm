@@ -49,3 +49,10 @@ class BeliefMap:
     def compute_entropy(self):
         epsilon = 1e-9
         return -np.sum(self.belief * np.log(self.belief + epsilon))
+    
+    def get_uncertainty_map(self):
+        """
+        High uncertainty = values near uniform
+        """
+        uniform = 1.0 / (self.size * self.size)
+        return np.abs(self.belief - uniform)
