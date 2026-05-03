@@ -1,210 +1,243 @@
 # SAR_vlm
 A sar model using vlm and drone. mainly to optimise battery and mark hotspots to find subject faster and efficiently
 
+---
+
 ```markdown
-# 🚁 Uncertainty-Aware Vision-Language Search for UAV-Based SAR
+# 🚁 Vision-Language Guided Search & Rescue (SAR) Drone Simulation
 
 ## 📌 Overview
 
-This project simulates an intelligent drone system for **Search and Rescue (SAR)** using:
+This project presents a **Vision-Language Model (VLM) driven Search & Rescue system** for detecting and locating humans in complex environments such as:
 
-- Probabilistic reasoning (Bayesian belief map)
-- Vision-Language inspired perception
-- Real aerial datasets (SARD + VisDrone)
-- Energy-aware and spatially-aware search planning
+- Dense jungle
+- Disaster zones
+- Highways
+- Open terrain
 
-The system models how a drone explores a jungle environment to locate a missing person under uncertainty.
+The system simulates a **drone-based search operation** using:
 
----
-
-## 🧠 Key Concepts
-
-- **Belief Map**: Probability distribution over possible victim locations
-- **Bayesian Update**: Updates belief based on observations
-- **Entropy**: Measures uncertainty
-- **Spatial Smoothing**: Creates hotspot tracking behavior
-- **Planner**: Chooses next move based on probability and distance
-- **Camera Footprint**: Drone observes multiple cells per step
+- 🧠 AI-based perception (YOLOE)
+- 📊 Probabilistic reasoning (grid-based belief)
+- 🧭 Intelligent path planning
+- 🎯 Target-focused search strategy
 
 ---
 
-## 📂 Project Structure
+## 🎯 Objective
 
+To design a system that:
+
+- Detects humans in **any posture or condition**
+- Works in **unstructured environments**
+- Minimizes search time
+- Avoids redundant scanning
+- Demonstrates **real-world deployability**
+
+---
+
+## 🧠 Core Idea
+
+We model the search space as a **grid-based probability map**, where:
+
+Each cell represents:
+- likelihood of human presence
+- updated dynamically using detections
+
+---
+
+## ⚙️ System Pipeline
+
+### 1. Image Acquisition
+- Input: single aerial image (drone view)
+- Image is divided into `N × N` grid
+
+---
+
+### 2. Perception (YOLOE - Prompt-based Detection)
+
+We use **YOLOE (Ultralytics)** for detection.
+
+Unlike traditional YOLO:
+- supports **text prompts**
+- detects humans in multiple contexts
+
+### Prompts used:
 ```
 
-SAR_VLM/
+person
+human
+human body
+person lying on ground
+person sitting
+person standing
+person partially hidden
+injured person
+lost person
+survivor
+
+````
+
+---
+
+### 3. Probability Map Construction
+
+Each detection is converted into a grid probability:
+
+\[
+P(c) = \frac{\text{confidence}}{\max(\text{confidence})}
+\]
+
+Where:
+- \( c \) = grid cell
+
+---
+
+### 4. Search Algorithm (Custom Designed)
+
+We define a scoring function:
+
+\[
+Score = \alpha P - \beta V - \gamma D
+\]
+
+Where:
+
+| Term | Meaning |
+|------|--------|
+| \( P \) | Detection probability |
+| \( V \) | Visit count (penalty) |
+| \( D \) | Distance from drone |
+
+Constants:
+- \( \alpha = 2.5 \)
+- \( \beta = 1.5 \)
+- \( \gamma = 0.5 \)
+
+---
+
+### 5. Drone Movement
+
+Drone follows:
+
+- **Greedy + penalty-based navigation**
+- Moves one step at a time
+- Avoids revisiting same cells
+- Prioritizes high-probability regions
+
+---
+
+### 6. Termination Condition
+
+Search stops when:
+
+- High confidence region found (`P > 0.8`)
+- OR maximum steps reached
+
+---
+
+## 📊 Visualization
+
+The system displays:
+
+- 🔥 Heatmap of probability
+- 📍 Drone path (cyan line)
+- 🔵 Current drone position
+- 🟥 Detected regions overlay
+
+---
+
+## 🧪 Features
+
+- Real-time simulation
+- Works on any uploaded image
+- Efficient search strategy
+- Avoids redundant traversal
+- Explainable AI pipeline
+
+---
+
+## 🧰 Tech Stack
+
+- Python
+- Streamlit (UI)
+- Ultralytics YOLOE
+- NumPy
+- Matplotlib
+- PyTorch
+
+---
+
+## 🚀 How to Run
+
+### 1. Install dependencies
+
+```bash
+pip install ultralytics streamlit torch torchvision pillow numpy pandas matplotlib
+````
+
+---
+
+### 2. Run app
+
+```bash
+streamlit run app.py
+```
+
+---
+
+### 3. Upload image
+
+* Use aerial / jungle / drone images
+* Click **Run**
+
+---
+
+## 📁 Project Structure
+
+```
+SAR_vlm/
 │
-├── main.py
-├── config.py
-│
-├── environment/
-├── agent/
-├── belief/
-├── perception/
-├── planner/
+├── app.py
+├── dataset/          # (ignored)
+├── data_dump/        # (ignored)
 ├── utils/
-│
-├── data_loader/
-│   ├── build_dataset.py
-│   └── grid_mapper.py
-│
-├── dataset/        # (ignored in git)
-├── data_dump/      # (ignored in git)
-
-````
-
----
-
-## 📊 Datasets Used
-
-- **SARD Dataset** → human detection
-- **VisDrone Dataset** → aerial imagery
-- (Optional) C2A dataset → robustness
-
-These are combined to create a **hybrid SAR dataset**.
-
----
-
-## ⚙️ Setup Instructions
-
-### 1️⃣ Clone Repository
-
-```bash
-git clone <your-repo-url>
-cd SAR_VLM
-````
-
----
-
-### 2️⃣ Install Dependencies
-
-```bash
-pip install numpy matplotlib pillow
-```
-
-(Optional for later phases)
-
-```bash
-pip install torch torchvision
-pip install git+https://github.com/openai/CLIP.git
+├── planner/
+├── perception/
+└── README.md
 ```
 
 ---
 
-### 3️⃣ Add Datasets
+## ⚠️ Notes
 
-Place downloaded datasets inside:
+* Dataset is **not included** (large size)
+* Model weights downloaded automatically
+* Works best with:
 
-```
-data_dump/
-```
-
-Example:
-
-```
-data_dump/
-├── sard/
-├── VisDrone2019-DET-train/
-```
+  * 640px images
+  * clear aerial perspective
 
 ---
 
-### 4️⃣ Build Dataset
+## 🔬 Research Contributions
 
-```bash
-python data_loader/build_dataset.py
-```
+This project introduces:
 
----
-
-### 5️⃣ Create Grid Mapping
-
-```bash
-python data_loader/grid_mapper.py
-```
-
-This generates:
-
-```
-dataset/grid/
-    0_0.jpg
-    0_1.jpg
-    ...
-```
+* Hybrid **VLM + Probabilistic Search**
+* Efficient grid-based exploration
+* Prompt-based human detection
+* Adaptive search strategy
 
 ---
 
-### 6️⃣ Run Simulation
+## 🚀 Future Improvements
 
-```bash
-python main.py
-```
-
----
-
-## 🎥 Output
-
-### 1. Heatmap Visualization
-
-* Red = high probability
-* Blue = low probability
-
-### 2. Image Grid Visualization
-
-* Each cell = real image
-* Drone movement tracked
-
----
-
-## 📐 Mathematical Model
-
-### Bayesian Update:
-
-[
-P(c|o) \propto P(o|c) \cdot P(c)
-]
-
----
-
-### Entropy:
-
-[
-H = -\sum P \log P
-]
-
----
-
-### Planner:
-
-[
-Score = \frac{P(victim)}{distance + 1}
-]
-
----
-
-## 🚀 Features Implemented
-
-* Probabilistic belief update
-* Multi-cell observation (camera footprint)
-* Spatial smoothing (hotspot detection)
-* Energy-aware planning
-* Real dataset integration
-
----
-
-## 🔬 Future Work
-
-* CLIP-based Vision-Language perception
-* Multi-evidence fusion (footprints, cloth, etc.)
 * Multi-drone coordination
-* Real-time deployment
-
----
-
-## ⚠️ Note
-
-Datasets are not included in the repository due to size constraints.
-Please download them separately.
+* Temporal tracking (video input)
+* Reinforcement Learning planner
+* Thermal + RGB fusion
+* Real-world drone integration
 
 ---
 
@@ -212,25 +245,4 @@ Please download them separately.
 
 Mritunjay Kumar
 
-````
-
 ---
-
-# 🧠 3. FINAL CHECKLIST BEFORE RUN
-
----
-
-## ✅ Make sure:
-
-- `dataset/grid/` exists  
-- images like `0_0.jpg` present  
-- no missing folders  
-
----
-
-## ✅ Run:
-
-```bash
-python main.py
-````
-
