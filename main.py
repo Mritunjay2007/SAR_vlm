@@ -11,7 +11,6 @@ from config import GRID_SIZE, NUM_STEPS, USE_IMAGE_GRID
 
 
 def main():
-
     env = GridEnvironment(GRID_SIZE)
     drone = Drone()
     belief = BeliefMap(GRID_SIZE)
@@ -19,61 +18,56 @@ def main():
     planner = Planner(GRID_SIZE)
 
     plt.figure()
-
     print(f"True victim location: {env.victim_pos}")
 
     for step in range(NUM_STEPS):
-
         pos = drone.position
 
-        # ✅ Update visit count (IMPORTANT)
+        # track visit
         planner.update_visit(pos)
 
-        # -----------------------------
-        # Camera observation (multi-cell)
-        # -----------------------------
+        # observe the local camera footprint
         visible_cells = sensor.get_visible_cells(pos, GRID_SIZE, radius=1)
 
         for cell in visible_cells:
             obs = sensor.observe(env, cell)
             belief.update(cell, obs)
 
-        # -----------------------------
-        # Compute uncertainty
-        # -----------------------------
         entropy = belief.compute_entropy()
-        uncertainty_map = belief.get_uncertainty_map()
+        explored_count = int(belief.explored.sum())
 
-        print(f"Step {step}, Pos={pos}, Entropy={entropy:.4f}")
+        print(
+            f"Step {step}, Pos={pos}, "
+            f"Entropy={entropy:.4f}, "
+            f"Explored={explored_count}/{GRID_SIZE * GRID_SIZE}"
+        )
 
-        # -----------------------------
-        # Visualization
-        # -----------------------------
+        # visualize
         if USE_IMAGE_GRID:
             show_image_grid(GRID_SIZE, drone.position)
         else:
             plot_state(belief.belief, pos, drone.path, step)
 
-        # -----------------------------
-        # Check if victim found
-        # -----------------------------
+        # victim check
         if env.is_victim(pos):
             print(f"\n✅ Victim found at {pos} in {step} steps!")
             break
 
-        # -----------------------------
-        # NEW ADVANCED PLANNER
-        # -----------------------------
-        target = planner.get_next_move(
+        # choose next move
+        next_step = planner.get_next_move(
             belief.belief,
-            uncertainty_map,
+            belief.explored,
             drone.position
         )
 
-        # -----------------------------
-        # Move step-by-step
-        # -----------------------------
-        drone.move_towards(target)
+        print(f"[Move] {pos} -> {next_step}")
+
+        # if planner somehow returns same cell, force escape
+        if next_step == pos:
+            next_step = planner.escape_move(belief.explored, pos)
+            print(f"[Escape] forced move -> {next_step}")
+
+        drone.move(next_step)
 
     plt.show()
 

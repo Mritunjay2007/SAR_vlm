@@ -1,58 +1,38 @@
 import numpy as np
-from config import DECAY
 
 class BeliefMap:
-
     def __init__(self, size):
         self.size = size
-        self.belief = np.ones((size, size)) / (size * size)
+        self.belief = np.ones((size, size), dtype=float) / (size * size)
+        self.explored = np.zeros((size, size), dtype=float)
+        self.eps = 1e-9
 
     def update(self, pos, observation_prob):
+        """
+        Update only the observed cell.
+        This keeps the belief stable and prevents global distortion.
+        """
+        x, y = pos
 
-        new_belief = np.zeros_like(self.belief)
+        self.explored[x][y] = 1.0
 
-        for i in range(self.size):
-            for j in range(self.size):
+        # observation_prob should be in [0, 1]
+        obs = float(np.clip(observation_prob, 0.01, 0.99))
 
-                prior = self.belief[i][j]
+        # local Bayesian-style update
+        self.belief[x][y] *= (0.05 + 0.95 * obs)
 
-                if (i, j) == pos:
-                    likelihood = observation_prob
-                else:
-                    likelihood = DECAY
+        # slight decay for still-unexplored cells
+        self.belief[self.explored == 0] *= 0.995
 
-                new_belief[i][j] = prior * likelihood
-
-        new_belief /= np.sum(new_belief)
-
-        self.belief = self.apply_spatial_smoothing(new_belief)
-
-    def apply_spatial_smoothing(self, belief):
-        smoothed = np.copy(belief)
-
-        for i in range(self.size):
-            for j in range(self.size):
-                for ni, nj in self.get_neighbors(i, j):
-                    smoothed[ni][nj] += 0.1 * belief[i][j]
-
-        smoothed /= np.sum(smoothed)
-        return smoothed
-
-    def get_neighbors(self, x, y):
-        neighbors = []
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < self.size and 0 <= ny < self.size:
-                neighbors.append((nx, ny))
-        return neighbors
+        # numerical safety
+        self.belief = np.maximum(self.belief, self.eps)
+        self.belief /= self.belief.sum()
 
     def compute_entropy(self):
-        epsilon = 1e-9
-        return -np.sum(self.belief * np.log(self.belief + epsilon))
-    
+        p = np.maximum(self.belief, self.eps)
+        return -np.sum(p * np.log(p))
+
     def get_uncertainty_map(self):
-        """
-        High uncertainty = values near uniform
-        """
         uniform = 1.0 / (self.size * self.size)
         return np.abs(self.belief - uniform)
