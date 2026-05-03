@@ -3,7 +3,17 @@ class Drone:
         self.position = start
         self.path = [start]
 
+    def move(self, next_pos):
+        """
+        Move exactly one grid cell.
+        """
+        self.position = next_pos
+        self.path.append(next_pos)
+
     def move_towards(self, target):
+        """
+        Backward-compatible one-step move toward a target.
+        """
         x, y = self.position
         tx, ty = target
 
@@ -16,5 +26,4 @@ class Drone:
         elif y > ty:
             y -= 1
 
-        self.position = (x, y)
-        self.path.append(self.position)
+        self.move((x, y))
