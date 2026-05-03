@@ -17,6 +17,7 @@ data/
 *.bin
 *.ckpt
 *.safetensors
+.ts
 
 # Ultralytics / YOLO cache
 runs/
