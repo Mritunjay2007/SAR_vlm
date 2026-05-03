@@ -1,3 +1,4 @@
+# perception/vlm_clip.py
 import numpy as np
 import torch
 from PIL import Image
@@ -10,13 +11,25 @@ except Exception:
 
 
 class CLIPVLM:
-    """
-    CLIP-based semantic scorer.
-    Takes a PIL image crop and returns prompt probabilities.
-    """
+    def __init__(self, prompts=None):
+        self.prompts = prompts or [
+            "person",
+            "human",
+            "human body",
+            "person lying on ground",
+            "person sitting",
+            "person standing",
+            "person partially hidden",
+            "injured person",
+            "lost person",
+            "survivor",
+            "backpack",
+            "clothes",
+            "shoe",
+            "footprints",
+            "empty forest background",
+        ]
 
-    def __init__(self, prompts):
-        self.prompts = prompts
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.enabled = False
         self.model = None
@@ -33,10 +46,6 @@ class CLIPVLM:
                 self.enabled = False
 
     def predict(self, image):
-        """
-        image: PIL.Image
-        returns: np.ndarray of prompt probabilities
-        """
         if not self.enabled:
             return self._mock_predict(image)
 
@@ -53,9 +62,6 @@ class CLIPVLM:
             return probs
 
     def _mock_predict(self, image):
-        """
-        Fallback when transformers/CLIP isn't available.
-        """
         arr = np.asarray(image.convert("RGB")).astype(np.float32) / 255.0
         gray = arr.mean(axis=2)
         texture = float(gray.std())
