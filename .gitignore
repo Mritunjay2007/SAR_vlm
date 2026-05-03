@@ -13,15 +13,13 @@ data/
 # =========================
 *.pt
 *.pth
-*.onnx
 *.bin
-*.ckpt
+*.ts
+*.onnx
 *.safetensors
-.ts
-
-# Ultralytics / YOLO cache
-runs/
 weights/
+runs/
+
 
 # =========================
 # PYTHON CACHE
