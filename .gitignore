@@ -9,11 +9,18 @@ data/
 *.jpeg
 
 # =========================
-# MODEL WEIGHTS
+# MODEL WEIGHTS (DO NOT PUSH)
 # =========================
 *.pt
 *.pth
 *.onnx
+*.bin
+*.ckpt
+*.safetensors
+
+# Ultralytics / YOLO cache
+runs/
+weights/
 
 # =========================
 # PYTHON CACHE
@@ -65,3 +72,7 @@ Thumbs.db
 # JUPYTER
 # =========================
 .ipynb_checkpoints/
+
+# cache
+.cache/
+ultralytics/
